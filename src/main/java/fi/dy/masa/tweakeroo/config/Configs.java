@@ -214,8 +214,11 @@ public class Configs implements IConfigHandler
         public static final ConfigStringList BLOCK_TYPE_BREAK_RESTRICTION_WHITELIST = new ConfigStringList("blockTypeBreakRestrictionWhiteList", ImmutableList.of(), "The only blocks that can be broken while the Block Break Restriction tweak is enabled,\nif the blockBreakRestrictionListType is set to White List");
         public static final ConfigStringList CREATIVE_EXTRA_ITEMS               = new ConfigStringList("creativeExtraItems", ImmutableList.of("minecraft:command_block", "minecraft:chain_command_block", "minecraft:repeating_command_block", "minecraft:dragon_egg", "minecraft:structure_void", "minecraft:structure_block", "minecraft:structure_block{BlockEntityTag:{mode:\"SAVE\"}}", "minecraft:structure_block{BlockEntityTag:{mode:\"LOAD\"}}", "minecraft:structure_block{BlockEntityTag:{mode:\"CORNER\"}}"), "Extra items that should be appended to the creative inventory.\nCurrently these will appear in the Transportation category.\nIn the future the group per added item will be customizable.");
         public static final ConfigOptionList ENTITY_TYPE_ATTACK_RESTRICTION_LIST_TYPE = new ConfigOptionList("entityTypeAttackRestrictionListType", ListType.BLACKLIST, "The restriction list type for the Entity Type Attack Restriction tweak");
+        public static final ConfigOptionList ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_LIST_TYPE = new ConfigOptionList("entityTypePeriodicAttackRestrictionListType", ListType.WHITELIST, "The restriction list type for the Entity Type Periodic Attack Restriction tweak");
         public static final ConfigStringList ENTITY_TYPE_ATTACK_RESTRICTION_BLACKLIST = new ConfigStringList("entityTypeAttackRestrictionBlackList", ImmutableList.of("minecraft:villager"), "The entities that are NOT allowed to be attacked while the Entity Attack Restriction tweak is enabled,\nif the entityAttackRestrictionListType is set to Black List");
+        public static final ConfigStringList ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_BLACKLIST = new ConfigStringList("entityTypePeriodicAttackRestrictionBlackList", ImmutableList.of("minecraft:villager"), "The entities that are NOT allowed to be attacked while the Entity Periodic Attack Restriction tweak is enabled,\nif the entityPeriodicAttackRestrictionListType is set to Black List");
         public static final ConfigStringList ENTITY_TYPE_ATTACK_RESTRICTION_WHITELIST = new ConfigStringList("entityTypeAttackRestrictionWhiteList", ImmutableList.of(), "The only entities that can be attacked while the Entity Attack Restriction tweak is enabled,\nif the entityAttackRestrictionListType is set to White List");
+        public static final ConfigStringList ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_WHITELIST = new ConfigStringList("entityTypePeriodicAttackRestrictionWhiteList", ImmutableList.of("minecraft:rabbit", "minecraft:chicken", "minecraft:cow", "minecraft:spider", "minecraft:zombie", "minecraft:skeleton", "minecraft:zombified_piglin", "minecraft:blaze", "minecraft:ghast"), "The only entities that can be attacked while the Periodic Entity Attack Restriction tweak is enabled,\nif the entityPeriodicAttackRestrictionListType is set to White List");
         public static final ConfigStringList ENTITY_WEAPON_MAPPING              = new ConfigStringList("entityWeaponMapping", ImmutableList.of("<default> => minecraft:diamond_sword, minecraft:golden_sword, minecraft:iron_sword, minecraft:netherite_sword, minecraft:stone_sword, minecraft:wooden_sword", "minecraft:end_crystal, minecraft:item_frame, minecraft:glow_item_frame, minecraft:leash_knot => <ignore>", "minecraft:minecart, minecraft:chest_minecart, minecraft:furnace_minecart, minecraft:hopper_minecart, minecraft:hopper_minecart, minecraft:spawner_minecart, minecraft:tnt_minecart, minecraft:boat=> minecraft:diamond_axe, minecraft:golden_axe, minecraft:iron_axe, minecraft:netherite_axe, minecraft:stone_axe, minecraft:wooden_axe"), "Mapping for what weapon should be used with the\n'tweakWeaponSwitch' tweak.\n'<default>' will be used when no other mapping is defined.\n'<ignore>' will not trigger a weapon switch.");
         public static final ConfigOptionList FAST_PLACEMENT_ITEM_LIST_TYPE      = new ConfigOptionList("fastPlacementItemListType", ListType.BLACKLIST, "The item restriction type for the Fast Block Placement tweak");
         public static final ConfigStringList FAST_PLACEMENT_ITEM_BLACKLIST      = new ConfigStringList("fastPlacementItemBlackList", ImmutableList.of("minecraft:ender_chest", "minecraft:white_shulker_box"), "The items that are NOT allowed to be used for the Fast Block Placement tweak,\nif the fastPlacementItemListType is set to Black List");
@@ -242,8 +245,11 @@ public class Configs implements IConfigHandler
                 BLOCK_TYPE_BREAK_RESTRICTION_WHITELIST,
                 CREATIVE_EXTRA_ITEMS,
                 ENTITY_TYPE_ATTACK_RESTRICTION_LIST_TYPE,
+                ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_LIST_TYPE,
                 ENTITY_TYPE_ATTACK_RESTRICTION_BLACKLIST,
+                ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_BLACKLIST,
                 ENTITY_TYPE_ATTACK_RESTRICTION_WHITELIST,
+                ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_WHITELIST,
                 ENTITY_WEAPON_MAPPING,
                 FAST_PLACEMENT_ITEM_LIST_TYPE,
                 FAST_RIGHT_CLICK_BLOCK_LIST_TYPE,
@@ -456,6 +462,11 @@ public class Configs implements IConfigHandler
         MiscTweaks.ENTITY_TYPE_ATTACK_RESTRICTION.setListContents(
                 Lists.ENTITY_TYPE_ATTACK_RESTRICTION_BLACKLIST.getStrings(),
                 Lists.ENTITY_TYPE_ATTACK_RESTRICTION_WHITELIST.getStrings());
+
+        MiscTweaks.ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION.setListType((ListType) Lists.ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_LIST_TYPE.getOptionListValue());
+        MiscTweaks.ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION.setListContents(
+            Lists.ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_BLACKLIST.getStrings(),
+            Lists.ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION_WHITELIST.getStrings());
 
         if (MinecraftClient.getInstance().world == null)
         {

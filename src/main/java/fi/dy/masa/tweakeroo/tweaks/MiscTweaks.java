@@ -1,22 +1,5 @@
 package fi.dy.masa.tweakeroo.tweaks;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
-import javax.annotation.Nullable;
-import net.minecraft.block.Block;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
 import fi.dy.masa.malilib.config.IConfigBoolean;
 import fi.dy.masa.malilib.config.IConfigInteger;
 import fi.dy.masa.malilib.gui.Message;
@@ -26,44 +9,67 @@ import fi.dy.masa.malilib.util.MessageOutputType;
 import fi.dy.masa.tweakeroo.Tweakeroo;
 import fi.dy.masa.tweakeroo.config.Configs;
 import fi.dy.masa.tweakeroo.config.FeatureToggle;
-import fi.dy.masa.tweakeroo.util.CameraEntity;
-import fi.dy.masa.tweakeroo.util.EntityRestriction;
-import fi.dy.masa.tweakeroo.util.IMinecraftClientInvoker;
-import fi.dy.masa.tweakeroo.util.InventoryUtils;
-import fi.dy.masa.tweakeroo.util.PotionRestriction;
+import fi.dy.masa.tweakeroo.util.*;
+import net.minecraft.block.Block;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+import net.minecraft.world.gen.chunk.FlatChunkGeneratorLayer;
 
-public class MiscTweaks
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
+public
+class MiscTweaks
 {
     public static final EntityRestriction ENTITY_TYPE_ATTACK_RESTRICTION = new EntityRestriction();
-    public static final PotionRestriction POTION_RESTRICTION = new PotionRestriction();
+    public static final EntityRestriction ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION = new EntityRestriction();
+    public static final PotionRestriction POTION_RESTRICTION             = new PotionRestriction();
 
-    private static final KeybindState KEY_STATE_ATTACK = new KeybindState(MinecraftClient.getInstance().options.attackKey, (mc) -> ((IMinecraftClientInvoker) mc).tweakeroo_invokeDoAttack());
-    private static final KeybindState KEY_STATE_USE = new KeybindState(MinecraftClient.getInstance().options.useKey, (mc) -> ((IMinecraftClientInvoker) mc).tweakeroo_invokeDoItemUse());
+    private static final KeybindState KEY_STATE_ATTACK
+                                                    = new KeybindState(MinecraftClient.getInstance().options.attackKey, (mc) -> ((IMinecraftClientInvoker) mc).tweakeroo_invokeDoAttack());
+    private static final KeybindState KEY_STATE_USE
+                                                    = new KeybindState(MinecraftClient.getInstance().options.useKey, (mc) -> ((IMinecraftClientInvoker) mc).tweakeroo_invokeDoItemUse());
 
     private static int potionWarningTimer;
 
-    private static class KeybindState
+    private static
+    class KeybindState
     {
-        private final KeyBinding keybind;
+        private final KeyBinding                keybind;
         private final Consumer<MinecraftClient> clickFunc;
-        private boolean state;
-        private int durationCounter;
-        private int intervalCounter;
+        private       boolean                   state;
+        private       int                       durationCounter;
+        private       int                       intervalCounter;
 
-        public KeybindState(KeyBinding keybind, Consumer<MinecraftClient> clickFunc)
+        public
+        KeybindState(KeyBinding keybind, Consumer<MinecraftClient> clickFunc)
         {
-            this.keybind = keybind;
+            this.keybind   = keybind;
             this.clickFunc = clickFunc;
         }
 
-        public void reset()
+        public
+        void reset()
         {
-            this.state = false;
+            this.state           = false;
             this.intervalCounter = 0;
             this.durationCounter = 0;
         }
 
-        public void handlePeriodicHold(int interval, int holdDuration, MinecraftClient mc)
+        public
+        void handlePeriodicHold(int interval, int holdDuration, MinecraftClient mc)
         {
             if (this.state)
             {
@@ -81,17 +87,29 @@ public class MiscTweaks
             }
         }
 
-        public void handlePeriodicClick(int interval, MinecraftClient mc)
+        public
+        void handlePeriodicClick(int interval, MinecraftClient mc)
         {
-            if (++this.intervalCounter >= interval)
+            this.intervalCounter++;
+            if (this.intervalCounter < interval)
             {
-                this.clickFunc.accept(mc);
-                this.intervalCounter = 0;
-                this.durationCounter = 0;
+                return;
             }
+            this.intervalCounter = 0;
+            this.durationCounter = 0;
+            if (FeatureToggle.TWEAK_ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION.getBooleanValue())
+            {
+                Entity targetedEntity = mc.targetedEntity;
+                if (!MiscTweaks.isEntityAllowedByPeriodicAttackingRestriction(targetedEntity == null ? null : targetedEntity.getType()))
+                {
+                    return;
+                }
+            }
+            this.clickFunc.accept(mc);
         }
 
-        private void setKeyState(boolean state, MinecraftClient mc)
+        private
+        void setKeyState(boolean state, MinecraftClient mc)
         {
             this.state = state;
 
@@ -106,7 +124,8 @@ public class MiscTweaks
         }
     }
 
-    public static void onTick(MinecraftClient mc)
+    public static
+    void onTick(MinecraftClient mc)
     {
         ClientPlayerEntity player = mc.player;
 
@@ -126,34 +145,24 @@ public class MiscTweaks
         CameraEntity.movementTick();
     }
 
-    public static void onGameLoop(MinecraftClient mc)
+    public static
+    void onGameLoop(MinecraftClient mc)
     {
         PlacementTweaks.onTick(mc);
 
         // Reset the counters after rendering each frame
-        Tweakeroo.renderCountItems = 0;
+        Tweakeroo.renderCountItems  = 0;
         Tweakeroo.renderCountXPOrbs = 0;
     }
 
-    private static void doPeriodicClicks(MinecraftClient mc)
+    private static
+    void doPeriodicClicks(MinecraftClient mc)
     {
         if (GuiUtils.getCurrentScreen() == null)
         {
-            handlePeriodicClicks(
-                    KEY_STATE_ATTACK,
-                    FeatureToggle.TWEAK_PERIODIC_HOLD_ATTACK,
-                    FeatureToggle.TWEAK_PERIODIC_ATTACK,
-                    Configs.Generic.PERIODIC_HOLD_ATTACK_INTERVAL,
-                    Configs.Generic.PERIODIC_HOLD_ATTACK_DURATION,
-                    Configs.Generic.PERIODIC_ATTACK_INTERVAL, mc);
+            handlePeriodicClicks(KEY_STATE_ATTACK, FeatureToggle.TWEAK_PERIODIC_HOLD_ATTACK, FeatureToggle.TWEAK_PERIODIC_ATTACK, Configs.Generic.PERIODIC_HOLD_ATTACK_INTERVAL, Configs.Generic.PERIODIC_HOLD_ATTACK_DURATION, Configs.Generic.PERIODIC_ATTACK_INTERVAL, mc);
 
-            handlePeriodicClicks(
-                    KEY_STATE_USE,
-                    FeatureToggle.TWEAK_PERIODIC_HOLD_USE,
-                    FeatureToggle.TWEAK_PERIODIC_USE,
-                    Configs.Generic.PERIODIC_HOLD_USE_INTERVAL,
-                    Configs.Generic.PERIODIC_HOLD_USE_DURATION,
-                    Configs.Generic.PERIODIC_USE_INTERVAL, mc);
+            handlePeriodicClicks(KEY_STATE_USE, FeatureToggle.TWEAK_PERIODIC_HOLD_USE, FeatureToggle.TWEAK_PERIODIC_USE, Configs.Generic.PERIODIC_HOLD_USE_INTERVAL, Configs.Generic.PERIODIC_HOLD_USE_DURATION, Configs.Generic.PERIODIC_USE_INTERVAL, mc);
         }
         else
         {
@@ -162,18 +171,14 @@ public class MiscTweaks
         }
     }
 
-    private static void handlePeriodicClicks(
-            KeybindState keyState,
-            IConfigBoolean cfgPeriodicHold,
-            IConfigBoolean cfgPeriodicClick,
-            IConfigInteger cfgHoldClickInterval,
-            IConfigInteger cfgHoldDuration,
-            IConfigInteger cfgClickInterval,
-            MinecraftClient mc)
+    private static
+    void handlePeriodicClicks(KeybindState keyState, IConfigBoolean cfgPeriodicHold, IConfigBoolean cfgPeriodicClick,
+                              IConfigInteger cfgHoldClickInterval, IConfigInteger cfgHoldDuration,
+                              IConfigInteger cfgClickInterval, MinecraftClient mc)
     {
         if (cfgPeriodicHold.getBooleanValue())
         {
-            int interval = cfgHoldClickInterval.getIntegerValue();
+            int interval     = cfgHoldClickInterval.getIntegerValue();
             int holdDuration = cfgHoldDuration.getIntegerValue();
             keyState.handlePeriodicHold(interval, holdDuration, mc);
         }
@@ -188,10 +193,10 @@ public class MiscTweaks
         }
     }
 
-    private static void doPotionWarnings(PlayerEntity player)
+    private static
+    void doPotionWarnings(PlayerEntity player)
     {
-        if (FeatureToggle.TWEAK_POTION_WARNING.getBooleanValue() &&
-            ++potionWarningTimer >= 100)
+        if (FeatureToggle.TWEAK_POTION_WARNING.getBooleanValue() && ++potionWarningTimer >= 100)
         {
             potionWarningTimer = 0;
 
@@ -200,7 +205,7 @@ public class MiscTweaks
             if (effects.isEmpty() == false)
             {
                 int minDuration = -1;
-                int count = 0;
+                int count       = 0;
 
                 for (StatusEffectInstance effectInstance : effects)
                 {
@@ -217,18 +222,20 @@ public class MiscTweaks
 
                 if (count > 0)
                 {
-                    InfoUtils.printActionbarMessage("tweakeroo.message.potion_effects_running_out",
-                            Integer.valueOf(count), Integer.valueOf(minDuration / 20));
+                    InfoUtils.printActionbarMessage("tweakeroo.message.potion_effects_running_out", Integer.valueOf(count), Integer.valueOf(
+                        minDuration / 20));
                 }
             }
         }
     }
 
-    public static boolean isEntityAllowedByAttackingRestriction(EntityType<?> type)
+    public static
+    boolean isEntityAllowedByAttackingRestriction(EntityType<?> type)
     {
         if (MiscTweaks.ENTITY_TYPE_ATTACK_RESTRICTION.isAllowed(type) == false)
         {
-            MessageOutputType messageOutputType = (MessageOutputType) Configs.Generic.ENTITY_TYPE_ATTACK_RESTRICTION_WARN.getOptionListValue();
+            MessageOutputType messageOutputType
+                = (MessageOutputType) Configs.Generic.ENTITY_TYPE_ATTACK_RESTRICTION_WARN.getOptionListValue();
 
             if (messageOutputType == MessageOutputType.MESSAGE)
             {
@@ -245,27 +252,34 @@ public class MiscTweaks
         return true;
     }
 
-
-    private static boolean potionWarningShouldInclude(StatusEffectInstance effect)
+    public static
+    boolean isEntityAllowedByPeriodicAttackingRestriction(EntityType<?> type)
     {
-        return effect.isAmbient() == false &&
-               (effect.getEffectType().isBeneficial() ||
-               Configs.Generic.POTION_WARNING_BENEFICIAL_ONLY.getBooleanValue() == false) &&
+        return MiscTweaks.ENTITY_TYPE_PERIODIC_ATTACK_RESTRICTION.isAllowed(type);
+    }
+
+    private static
+    boolean potionWarningShouldInclude(StatusEffectInstance effect)
+    {
+        return effect.isAmbient() == false && (effect.getEffectType().isBeneficial() ||
+                                               Configs.Generic.POTION_WARNING_BENEFICIAL_ONLY.getBooleanValue() ==
+                                               false) &&
                effect.getDuration() <= Configs.Generic.POTION_WARNING_THRESHOLD.getIntegerValue() &&
                POTION_RESTRICTION.isAllowed(effect.getEffectType());
     }
 
     @Nullable
-    public static FlatChunkGeneratorLayer[] parseBlockString(String blockString)
+    public static
+    FlatChunkGeneratorLayer[] parseBlockString(String blockString)
     {
-        List<FlatChunkGeneratorLayer> list = new ArrayList<>();
-        String[] strings = blockString.split(",");
-        final int count = strings.length;
-        int thicknessSum = 0;
+        List<FlatChunkGeneratorLayer> list         = new ArrayList<>();
+        String[]                      strings      = blockString.split(",");
+        final int                     count        = strings.length;
+        int                           thicknessSum = 0;
 
         for (int i = 0; i < count; ++i)
         {
-            String str = strings[i];
+            String                  str   = strings[i];
             FlatChunkGeneratorLayer layer = parseLayerString(str, thicknessSum);
 
             if (layer == null)
@@ -282,10 +296,11 @@ public class MiscTweaks
     }
 
     @Nullable
-    private static FlatChunkGeneratorLayer parseLayerString(String string, int startY)
+    private static
+    FlatChunkGeneratorLayer parseLayerString(String string, int startY)
     {
         String[] strings = string.split("\\*", 2);
-        int thickness;
+        int      thickness;
 
         if (strings.length == 2)
         {
@@ -304,8 +319,8 @@ public class MiscTweaks
             thickness = 1;
         }
 
-        int endY = Math.min(startY + thickness, 256);
-        int finalThickness = endY - startY;
+        int   endY           = Math.min(startY + thickness, 256);
+        int   finalThickness = endY - startY;
         Block block;
 
         try
@@ -320,7 +335,8 @@ public class MiscTweaks
 
         if (block == null)
         {
-            Tweakeroo.logger.error("Error while parsing flat world string => Unknown block, {}", strings[strings.length - 1]);
+            Tweakeroo.logger.error("Error while parsing flat world string => Unknown block, {}", strings[
+                strings.length - 1]);
             return null;
         }
         else
@@ -333,7 +349,8 @@ public class MiscTweaks
     }
 
     @Nullable
-    private static Block getBlockFromName(String name)
+    private static
+    Block getBlockFromName(String name)
     {
         try
         {
